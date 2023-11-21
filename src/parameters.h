@@ -34,7 +34,7 @@ public:
 
     float xlo, xhi, ylo, yhi, zlo, zhi;
 
-    int bond_break_message;
+    int bond_break_message, stop_on_breakage;
 
     // float eta;
 
@@ -149,6 +149,7 @@ void parameters::load(string inputfile)
     steps_to_skip = matchstring(inputfile, "steps_to_skip");
 
     bond_break_message = matchstring(inputfile, "bond_break_message");
+    stop_on_breakage = matchstring(inputfile, "stop_on_breakage");
 }
 
 #endif

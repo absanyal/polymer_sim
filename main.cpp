@@ -194,6 +194,10 @@ int main(int argc, char *argv[])
                              << ", distance = "
                              << dist_in
                              << endl;
+
+                             if (prm.stop_on_breakage == 1){
+                                exit(0);
+                             }
                     }
                 }
 
