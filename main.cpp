@@ -184,14 +184,17 @@ int main(int argc, char *argv[])
                 r_in = vecsum(r_i, vecneg(r_n));
                 dist_in = norm(r_in);
 
-                if (dist_in > 10.0 * prm.bond_r0)
+                if (prm.bond_break_message == 1)
                 {
-                    cout << "Bond broken: monomers " << i << " and "
-                         << monomers[i].neighbors[n]
-                         << ", t = " << t_iter
-                         << ", distance = "
-                         << dist_in
-                         << endl;
+                    if (dist_in > 10.0 * prm.bond_r0)
+                    {
+                        cout << "Bond broken: monomers " << i << " and "
+                             << monomers[i].neighbors[n]
+                             << ", t = " << t_iter
+                             << ", distance = "
+                             << dist_in
+                             << endl;
+                    }
                 }
 
                 // spring force from harmonic bonds
