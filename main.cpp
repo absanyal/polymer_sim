@@ -153,8 +153,8 @@ int main(int argc, char *argv[])
 
     double sigma_by_r;
 
-    c1 = prm.D / (prm.kB * prm.T);
-    c2 = sqrt(2.0 * prm.D);
+    c1 = prm.D / (prm.kB * prm.T) * prm.dt;
+    c2 = sqrt(2.0 * prm.D * prm.dt) * prm.dt;
 
     for (int t_iter = 0; t_iter < prm.iterations; t_iter++)
     {
@@ -195,9 +195,10 @@ int main(int argc, char *argv[])
                              << dist_in
                              << endl;
 
-                             if (prm.stop_on_breakage == 1){
-                                exit(0);
-                             }
+                        if (prm.stop_on_breakage == 1)
+                        {
+                            exit(0);
+                        }
                     }
                 }
 
@@ -221,20 +222,20 @@ int main(int argc, char *argv[])
             }
 
             // generate the noise
-            W[0] = 2.0 * rng.random() - 1.0;
-            W[1] = 2.0 * rng.random() - 1.0;
-            W[2] = 2.0 * rng.random() - 1.0;
+            W[0] = rng.random() - 0.5;
+            W[1] = rng.random() - 0.5;
+            W[2] = rng.random() - 0.5;
 
-            Wnf = norm(W);
+            // Set variance of each component of W to dt
 
-            W[0] = W[0] / Wnf;
-            W[1] = W[1] / Wnf;
-            W[2] = W[1] / Wnf;
+            // W[0] = W[0] * sqrt(prm.dt) ;
+            // W[1] = W[1] * sqrt(prm.dt) ;
+            // W[2] = W[1] * sqrt(prm.dt) ;
 
             // calculate total displacements
-            dx = c1 * monomers[i].x_force * prm.dt + c2 * W[0];
-            dy = c1 * monomers[i].y_force * prm.dt + c2 * W[1];
-            dz = c1 * monomers[i].z_force * prm.dt + c2 * W[2];
+            dx = c1 * monomers[i].x_force + c2 * W[0];
+            dy = c1 * monomers[i].y_force + c2 * W[1];
+            dz = c1 * monomers[i].z_force + c2 * W[2];
 
             // cap displacements
 
