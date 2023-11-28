@@ -32,7 +32,7 @@ public:
 
     int steps_to_skip;
 
-    float xlo, xhi, ylo, yhi, zlo, zhi;
+    // float xlo, xhi, ylo, yhi, zlo, zhi;
 
     int bond_break_message, stop_on_breakage;
 
@@ -117,14 +117,14 @@ void parameters::load(string inputfile)
 
     length = matchstring(inputfile, "length");
 
-    xlo = matchstring(inputfile, "xlo");
-    xhi = matchstring(inputfile, "xhi");
+    // xlo = matchstring(inputfile, "xlo");
+    // xhi = matchstring(inputfile, "xhi");
 
-    ylo = matchstring(inputfile, "ylo");
-    yhi = matchstring(inputfile, "yhi");
+    // ylo = matchstring(inputfile, "ylo");
+    // yhi = matchstring(inputfile, "yhi");
 
-    zlo = matchstring(inputfile, "zlo");
-    zhi = matchstring(inputfile, "zhi");
+    // zlo = matchstring(inputfile, "zlo");
+    // zhi = matchstring(inputfile, "zhi");
     
 
     // r = matchstring(inputfile, "r");
