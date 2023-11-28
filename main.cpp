@@ -15,6 +15,12 @@
 
 #define PI acos(-1.0)
 
+#define sigma_scale 1.0
+#define epsilon_scale 1.0
+#define nano 1E-9
+#define micro 1E-6
+#define milli 1E-3
+
 using namespace std;
 
 parameters prm;
@@ -96,6 +102,11 @@ vector<double> unitrandvec()
     return result;
 }
 
+void printsep()
+{
+    cout << "==================================================" << endl;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -104,13 +115,17 @@ int main(int argc, char *argv[])
     }
     string inputfile = argv[1];
     prm.load(inputfile);
+    printsep();
 
     // set seed
     rng.set_seed(prm.seed);
 
     vector<monomer> monomers(prm.length);
+    assert(monomers.size() == prm.length);
 
     // initialization
+
+    double x_cm_0, y_cm_0, z_cm_0;
 
     for (int i = 0; i < monomers.size(); i++)
     {
@@ -120,6 +135,11 @@ int main(int argc, char *argv[])
 
         // set the initial position of each monomer along x-axis separated by bond_r0
         monomers[i].x_pos = i * prm.bond_r0;
+
+        // store initial positions;
+        x_cm_0 += monomers[i].x_pos;
+        y_cm_0 += monomers[i].y_pos;
+        z_cm_0 += monomers[i].z_pos;
 
         // initialize neighbors list
         if (i == 0)
@@ -137,8 +157,39 @@ int main(int argc, char *argv[])
         }
     }
 
+    // initial position of CoM
+    x_cm_0 = x_cm_0 / (1.0 * monomers.size());
+    y_cm_0 = y_cm_0 / (1.0 * monomers.size());
+    z_cm_0 = z_cm_0 / (1.0 * monomers.size());
+
+    double tau;
+    tau = ((prm.kB * prm.T) * pow((sigma_scale * nano), 2) / (epsilon_scale * (prm.D * micro * micro))) / (milli);
+    cout << "tau = " << tau << " s." << endl;
+    cout << "Total time for run = "
+         << prm.dt * prm.iterations * tau / (1000)
+         << "  ms." << endl;
+    printsep();
+
+    cout << "x_cm_0 = " << x_cm_0 << endl;
+    cout << "y_cm_0 = " << y_cm_0 << endl;
+    cout << "z_cm_0 = " << z_cm_0 << endl;
+    printsep();
+
     ofstream dump;
     dump.open("dump.dat");
+
+    ofstream com_pos;
+    com_pos.open("com_pos.dat");
+    com_pos << "#t"
+            << "\t"
+            << "dx_cm"
+            << "\t"
+            << "dy_cm"
+            << "\t"
+            << "dz_cm"
+            << "\t"
+            << "ds_cm^2"
+            << endl;
 
     double dx, dy, dz;
     double c1, c2;
@@ -153,8 +204,13 @@ int main(int argc, char *argv[])
 
     double sigma_by_r;
 
-    c1 = prm.D / (prm.kB * prm.T) * prm.dt;
-    c2 = sqrt(2.0 * prm.D * prm.dt) * prm.dt;
+    double cm_dx, cm_dy, cm_dz;
+    // double cm_dx_sq, cm_dy_sq, cm_dz_sq;
+    double cm_x, cm_y, cm_z;
+    double cm_ds_sq;
+
+    c1 = (prm.D / (prm.kB * prm.T)) * prm.dt;
+    c2 = sqrt(2.0 * prm.D * prm.dt);
 
     for (int t_iter = 0; t_iter < prm.iterations; t_iter++)
     {
@@ -166,11 +222,19 @@ int main(int argc, char *argv[])
             monomers[i].reset_force();
         }
 
+        // at every t, set cm position and displacement to 0
+        cm_dx = 0.0;
+        cm_dy = 0.0;
+        cm_dz = 0.0;
+        cm_x = 0.0;
+        cm_y = 0.0;
+        cm_z = 0.0;
+
         // Force simulation happens here
 
         for (int i = 0; i < monomers.size(); i++)
         {
-            // cout << "Currently at m" << i << endl;
+            // cout << "Currently at m " << i << endl;
 
             // particle-particle forces
             for (int n = 0; n < monomers[i].neighbors.size(); n++)
@@ -219,36 +283,50 @@ int main(int argc, char *argv[])
                     monomers[i].y_force += prefactor * r_in[1];
                     monomers[i].z_force += prefactor * r_in[2];
                 }
-            }
+
+            } // force calculation loop ends here
 
             // generate the noise
             W[0] = rng.random() - 0.5;
             W[1] = rng.random() - 0.5;
             W[2] = rng.random() - 0.5;
 
-            // Set variance of each component of W to dt
-
-            // W[0] = W[0] * sqrt(prm.dt) ;
-            // W[1] = W[1] * sqrt(prm.dt) ;
-            // W[2] = W[1] * sqrt(prm.dt) ;
-
             // calculate total displacements
             dx = c1 * monomers[i].x_force + c2 * W[0];
             dy = c1 * monomers[i].y_force + c2 * W[1];
             dz = c1 * monomers[i].z_force + c2 * W[2];
 
-            // cap displacements
-
             // update positions
             monomers[i].x_pos += dx;
             monomers[i].y_pos += dy;
             monomers[i].z_pos += dz;
+
+        } // loop over monomers ends here
+
+        // calculate new CoM position at this t
+        for (int i = 0; i < monomers.size(); i++)
+        {
+            cm_x += monomers[i].x_pos;
+            cm_y += monomers[i].y_pos;
+            cm_z += monomers[i].z_pos;
         }
+
+        cm_x = cm_x / (1.0 * monomers.size());
+        cm_y = cm_y / (1.0 * monomers.size());
+        cm_z = cm_z / (1.0 * monomers.size());
+
+        // calculate displacement of CoM from the starting position
+        cm_dx = cm_x - x_cm_0;
+        cm_dy = cm_y - y_cm_0;
+        cm_dz = cm_z - z_cm_0;
+
+        cm_ds_sq = pow(cm_dx, 2) + pow(cm_dy, 2) + pow(cm_dz, 2);
 
         // Data dumping
         if (t_iter % prm.steps_to_skip == 0)
         {
-            // cout << "Dumping at t = " << t_iter << endl;
+            // Dump particle positions
+            //  cout << "Dumping at t = " << t_iter << endl;
             dump << prm.length << endl;
             dump << "polymer" << endl;
 
@@ -261,10 +339,19 @@ int main(int argc, char *argv[])
                     << monomers[i].y_pos << " "
                     << monomers[i].z_pos << endl;
             }
+
+            // Dump CM displacements
+            com_pos << t_iter * prm.dt << "\t"
+                    << cm_dx << "\t"
+                    << cm_dy << "\t"
+                    << cm_dz << "\t"
+                    << cm_ds_sq
+                    << endl;
         }
-    }
+    } // loop over time ends here
 
     dump.close();
+    com_pos.close();
 
     return 0;
 }
