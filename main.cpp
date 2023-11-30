@@ -164,10 +164,10 @@ int main(int argc, char *argv[])
 
     double tau;
     tau = ((prm.kB * prm.T) * pow((sigma_scale * nano), 2) / (epsilon_scale * (prm.D * micro * micro))) / (milli);
-    cout << "tau = " << tau << " s." << endl;
+    cout << "tau = " << tau << " ms." << endl;
     cout << "Total time for run = "
          << prm.dt * prm.iterations * tau / (1000)
-         << "  ms." << endl;
+         << " s." << endl;
     printsep();
 
     cout << "x_cm_0 = " << x_cm_0 << endl;

@@ -52,7 +52,7 @@ do #Enter T
 mkdir -p T_${T}
 cd T_${T}
 
-for D in 0.017
+for D in 0.1
 do #Enter D
 
 mkdir -p D_${D}
@@ -82,7 +82,7 @@ sed -i -e "s/VAL_STOPONBRK/${stop_on_breakage}/g" ${input}
 
 echo Running L=${length} seed=${seed} dt=${dt} T=${T} D=${D}
 
-# time ./polysim ${input} > ${output}
+time ./polysim ${input} > ${output}
 
 cd ../
 done #Return to T

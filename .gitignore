@@ -6,5 +6,6 @@
 !*.h
 !*.hpp
 !template*
-!*.sh
 !*.py
+!*.sh
+!*gp
