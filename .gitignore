@@ -7,5 +7,4 @@
 !*.hpp
 !template*
 !*.py
-!*.sh
 !*gp
